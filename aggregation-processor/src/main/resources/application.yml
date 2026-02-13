@@ -1,0 +1,32 @@
+# Aggregation Processor Configuration
+processor:
+  application-id: aggregation-processor
+  # Number of concurrent consumer threads
+  concurrency: 3
+
+# Kafka Configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  topic:
+    tasks: aggregation.tasks
+  consumer:
+    group-id: aggregation-processor
+    poll-timeout-ms: 1000
+    auto-offset-reset: earliest
+    enable-auto-commit: false
+
+# MongoDB Configuration
+mongo:
+  uri: mongodb://localhost:27017
+  database: aggregation_db
+
+# Monitoring
+metrics:
+  enabled: true
+  port: 8080
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.aggregation.processor: DEBUG

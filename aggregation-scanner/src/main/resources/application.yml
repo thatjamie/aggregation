@@ -1,0 +1,23 @@
+# Task Scanner Configuration
+scanner:
+  # Scan interval in milliseconds (default: 60000 = 1 minute)
+  interval-ms: 60000
+  # Maximum number of tasks to process per scan
+  batch-size: 100
+
+# Kafka Configuration
+kafka:
+  bootstrap-servers: localhost:9092
+  topic:
+    tasks: aggregation.tasks
+
+# MongoDB Configuration
+mongo:
+  uri: mongodb://localhost:27017
+  database: aggregation_db
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.aggregation.scanner: DEBUG

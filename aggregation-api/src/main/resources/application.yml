@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: aggregation-api
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: aggregation-api
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual_immediate
+
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 2
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+aggregation:
+  output-topic: data.aggregated
+  redis-key-prefix: agg:
