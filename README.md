@@ -445,6 +445,103 @@ GET /actuator/prometheus
 | Out of memory | Increase heap: `AGGREGATION_OPTS="-Xmx4g"` |
 | Empty results | Verify source collection has data matching criteria |
 
+## Reactive vs Blocking Implementation
+
+### Current Approach: Blocking/Synchronous
+
+The current implementation uses the **synchronous MongoDB Java driver** with blocking operations:
+
+| Component | Current Implementation |
+|-----------|----------------------|
+| **MongoDB Driver** | `mongodb-driver-sync` (blocking) |
+| **Collection Type** | `MongoCollection<Document>` |
+| **Aggregation** | `.aggregate(pipeline).into(List)` - loads all results into memory |
+| **Kafka Consumer** | `KafkaConsumer` (poll-based, blocking) |
+| **Result Handling** | `List<Document>` - all documents in memory |
+
+**Characteristics:**
+- ✅ Simpler to understand and debug
+- ✅ Easier to write unit tests
+- ✅ Predictable execution flow
+- ⚠️ Loads entire result set into memory
+- ⚠️ Blocks thread during I/O operations
+- ⚠️ May cause OOM with very large aggregation results
+
+### Alternative: Reactive/Streaming
+
+A **reactive implementation** would use async non-blocking operations:
+
+| Component | Reactive Implementation |
+|-----------|----------------------|
+| **MongoDB Driver** | `mongodb-driver-reactivestreams` |
+| **Collection Type** | `MonoMongoCollection<Document>` |
+| **Aggregation** | `.aggregate(pipeline)` - returns `Publisher<Document>` |
+| **Kafka Consumer** | `ReactiveKafkaConsumer` or `Flux`-based |
+| **Result Handling** | `Flux<Document>` - stream processing |
+
+**Benefits of Reactive Approach:**
+- ✅ Stream results incrementally (lower memory footprint)
+- ✅ Better resource utilization (non-blocking I/O)
+- ✅ Natural backpressure support
+- ✅ Can handle very large result sets without OOM
+- ✅ Better throughput with high concurrency
+
+**Trade-offs:**
+- ⚠️ More complex error handling
+- ⚠️ Reactive debugging can be challenging
+- ⚠️ Requires reactive programming knowledge (Project Reactor/RxJava)
+- ⚠️ Steeper learning curve for new developers
+
+### When to Consider Migrating to Reactive
+
+**Stay with blocking if:**
+- Result sets are typically small (< 10,000 documents)
+- Team is not familiar with reactive programming
+- Simplicity and maintainability are priorities
+- Low to moderate throughput requirements
+
+**Consider reactive migration if:**
+- Aggregation results frequently exceed 100,000+ documents
+- Experiencing OOM issues with large aggregations
+- Need higher throughput with limited resources
+- Team has reactive programming experience
+- Want to leverage backpressure for flow control
+
+### Migration Path
+
+To migrate to reactive, would need to:
+
+1. **Update dependencies:**
+   ```kotlin
+   // build.gradle.kts
+   implementation("org.mongodb:mongodb-driver-reactivestreams:${property("mongoVersion")}")
+   implementation("io.projectreactor:reactor-core:3.6.0")
+   ```
+
+2. **Refactor AggregationService:**
+   ```java
+   // Current: Blocking
+   List<Document> results = new ArrayList<>();
+   collection.aggregate(pipeline).into(results);
+
+   // Reactive: Streaming
+   Publisher<Document> publisher = collection.aggregate(pipeline);
+   Flux.from(publisher)
+       .buffer(1000)  // Process in batches
+       .flatMap(this::saveBatch)
+       .subscribe();
+   ```
+
+3. **Update Kafka consumer to reactive:**
+   ```java
+   // Current: Polling
+   ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+
+   // Reactive: Stream
+   Flux<ConsumerRecord<String, String>> flux = KafkaReceiver.create(options)
+       .receive();
+   ```
+
 ## Architecture Migration Notes
 
 This is a **task-based redesign** of the original CDC/Kafka Streams architecture:
