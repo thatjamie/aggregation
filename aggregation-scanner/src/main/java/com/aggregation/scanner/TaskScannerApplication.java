@@ -1,7 +1,5 @@
 package com.aggregation.scanner;
 
-import com.aggregation.model.Task;
-import com.aggregation.scanner.config.KafkaProducerConfig;
 import com.aggregation.scanner.config.MongoConfig;
 import com.aggregation.scanner.repository.TaskRepository;
 import com.aggregation.scanner.service.TaskScannerService;

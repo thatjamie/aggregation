@@ -4,10 +4,9 @@ import com.aggregation.model.Task;
 import com.aggregation.processor.model.AggregationResult;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.BsonField;
 import com.mongodb.client.result.InsertManyResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -138,7 +137,7 @@ public class AggregationService {
             Object idValue = groupStage.get("_id");
 
             // Build accumulators
-            List<Bson> accumulators = new ArrayList<>();
+            List<BsonField> accumulators = new ArrayList<>();
             for (Map.Entry<String, Object> entry : groupStage.entrySet()) {
                 if (!entry.getKey().equals("_id")) {
                     Map<String, Object> acc = (Map<String, Object>) entry.getValue();
@@ -200,7 +199,7 @@ public class AggregationService {
      * @return BsonField accumulator
      */
     @SuppressWarnings("unchecked")
-    private Bson parseAccumulator(String fieldName, Map<String, Object> accumulator) {
+    private BsonField parseAccumulator(String fieldName, Map<String, Object> accumulator) {
         for (Map.Entry<String, Object> entry : accumulator.entrySet()) {
             String operator = entry.getKey();
             Object value = entry.getValue();
