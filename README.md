@@ -43,8 +43,87 @@ This project demonstrates a modern architecture for aggregating data using a tas
 
 ### Prerequisites
 - Java 21+
-- Docker & Docker Compose
+- A container runtime (see options below)
 - Gradle 8.x (or use provided wrapper)
+
+### Container Runtime Options (macOS)
+
+Choose one of the following container runtimes:
+
+#### Option 1: Docker Desktop (Traditional)
+```bash
+# Install Docker Desktop from docker.com
+# Then use docker-compose
+docker-compose up -d
+```
+
+#### Option 2: Colima (Recommended for Apple Silicon)
+Lightweight Docker-compatible runtime optimized for macOS:
+```bash
+# Install via Homebrew
+brew install colima docker docker-compose
+
+# Start Colima
+colima start
+
+# Use docker-compose as usual
+docker-compose up -d
+```
+
+#### Option 3: Podman + Podman Compose
+Red Hat's daemonless container engine:
+```bash
+# Install via Homebrew
+brew install podman podman-compose
+
+# Start services
+podman-compose up -d
+```
+
+#### Option 4: Apple Container CLI (Experimental)
+Apple's native container runtime for macOS (limited compose support):
+```bash
+# Requires macOS 15+ and Xcode 26 beta
+# Note: No native compose support yet - must run containers individually
+
+# Start MongoDB
+container run \
+  --name mongodb \
+  --publish 27017:27017 \
+  --volume mongodb_data:/data/db \
+  --env MONGO_INITDB_DATABASE=aggregation_db \
+  mongo:7.0
+
+# Start Kafka (KRaft mode)
+container run \
+  --name kafka \
+  --publish 9092:9092 \
+  --publish 9101:9101 \
+  --env KAFKA_NODE_ID=1 \
+  --env KAFKA_PROCESS_ROLES=broker,controller \
+  --env KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,BROKER://0.0.0.0:29093 \
+  --env KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+  --env KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:29093 \
+  confluentinc/cp-kafka:latest
+
+# Start Redis (optional)
+container run \
+  --name redis \
+  --publish 6379:6379 \
+  redis:7-alpine
+```
+
+**Recommendation:** For multi-service projects like this, **Colima (Option 2)** provides the best balance of:
+- Full docker-compose compatibility
+- Apple Silicon optimization
+- Lightweight resource usage
+
+| Runtime | Compose Support | Apple Silicon | Resource Usage |
+|---------|-----------------|---------------|----------------|
+| Docker Desktop | ✅ Full | ✅ Good | High |
+| Colima | ✅ Full | ✅ Excellent | Low |
+| Podman | ✅ Via podman-compose | ✅ Good | Low |
+| Apple Container | ❌ None | ✅ Native | Very Low |
 
 ### 1. Start Infrastructure (2 min)
 
