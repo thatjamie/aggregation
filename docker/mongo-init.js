@@ -28,12 +28,12 @@ db.aggregation_tasks.createIndex(
 );
 print('Created index: createdAt_idx');
 
-// Create a TTL index to automatically clean up old completed tasks (optional - 30 days)
+// Create a TTL index to automatically clean up old completed tasks (24 hours for POC)
 db.aggregation_tasks.createIndex(
     { completedAt: 1 },
-    { name: 'completedAt_ttl_idx', expireAfterSeconds: 2592000 }
+    { name: 'completedAt_ttl_idx', expireAfterSeconds: 86400 }
 );
-print('Created TTL index: completedAt_ttl_idx (30 days)');
+print('Created TTL index: completedAt_ttl_idx (24 hours)');
 
 // Insert sample task documents for testing
 db.aggregation_tasks.insertMany([
